@@ -67,62 +67,7 @@ public class DocxMerger {
         // transfer parts and relations
         {
             HashMap<String, String> oldAndNewIds = new HashMap<>();
-            int ind1 = strAddBody1.indexOf("<w:altChunk");
-            while (ind1 > -1) {
-                ind1 = strAddBody1.indexOf("r:id=\"", ind1) + 6;
-                int ind2 = strAddBody1.indexOf("\"", ind1);
-                String id = strAddBody1.substring(ind1, ind2);
-                PackageRelationshipCollection coll = docToAdd.getPackage()
-                        .getPartsByContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml")
-                        .get(0).getRelationships();
-                PackageRelationship foundRel = null;
-                Iterator<PackageRelationship> iter = coll.iterator();
-                while (iter.hasNext() && (foundRel == null)) {
-                    PackageRelationship rel = iter.next();
-                    if (rel.getId().equals(id)) {
-                        foundRel = rel;
-                    }
-                }
 
-                if (foundRel != null) {
-                    PackagePart pck = mergePkg1
-                            .getPartsByContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml")
-                            .get(0);
-
-                    String targetURIStr = foundRel.getTargetURI().toString();
-                    targetURIStr = targetURIStr.substring(0, targetURIStr.lastIndexOf('.')) + System.currentTimeMillis()
-                            + targetURIStr.substring(targetURIStr.lastIndexOf('.'));
-                    URI targetURI = new URI(targetURIStr);
-
-                    String newId = pck.addRelationship(targetURI, foundRel.getTargetMode(), foundRel.getRelationshipType())
-                            .getId();
-
-                    oldAndNewIds.put(id, newId);
-
-                    PackagePart pt = docToAdd.getPackage().getPart(PackagingURIHelper.createPartName(foundRel.getTargetURI()));
-
-                    PackagePart tpt = mergePkg1.createPart(PackagingURIHelper.createPartName(targetURI), pt.getContentType());
-
-                    OutputStream out = tpt.getOutputStream();
-                    InputStream in = pt.getInputStream();
-
-                    int len;
-                    byte[] b = new byte[8192];
-                    while ((len = in.read(b)) > -1) {
-                        out.write(b, 0, len);
-                    }
-
-                    out.flush();
-                    out.close();
-
-                    tpt.flush();
-                    tpt.close();
-
-                    in.close();
-                }
-
-                ind1 = strAddBody1.indexOf("<w:altChunk", ind2);
-            }
 
             List<XWPFPictureData> pics = docToAdd.getAllPackagePictures();
             for (XWPFPictureData pic : pics) {
